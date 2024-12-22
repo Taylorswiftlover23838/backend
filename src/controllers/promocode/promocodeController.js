@@ -1,6 +1,5 @@
 const db = require("../../config/dbConn");
-const generateTransactionId = require('../../utils/generateTransactionId');
-const { emitToUser } = require('../../socket');
+const updateUserBalance = require('../../utils/UpdateUserBalance')
 
 const promoCode = async (req, res) => {
   const userId = req.user.userId;
@@ -35,23 +34,6 @@ const promoCode = async (req, res) => {
         .json({ message: "You have already redeemed this promo code" });
     }
 
-
-    await db.query(
-      `
-        UPDATE users SET balance = balance + ? WHERE id = ?
-    `,
-      [codeData.token_amount, userId]
-    );
-
-    // Get the updated balance
-    const [updatedUser] = await db.query(
-      "SELECT balance FROM users WHERE id = ?",
-      [userId]
-    );
-
-    // Emit to the specific user who redeemed the code
-    emitToUser(userId, "userDataUpdate", updatedUser[0].balance);
-
     await db.query(
       `
         UPDATE promocodes SET used_count = used_count + 1 WHERE code = ?
@@ -67,21 +49,8 @@ const promoCode = async (req, res) => {
       [userId, promoCode]
     );
 
-    const transactionId = generateTransactionId(); 
-    await db.query(
-      `
-            INSERT INTO transactions (transaction_id, user_id, kind, amount, balance, action) 
-            VALUES (?, ?, ?, ?, ?, ?)
-        `,
-      [
-        transactionId,
-        userId,
-        "Promotion",
-        codeData.token_amount,
-        updatedUser[0].balance,
-        "Use Code"
-      ]
-    );
+    updateUserBalance(userId, codeData.token_amount, "Promotion", "Use Code");
+
 
     res.status(200).json({
       message: "Promo code redeemed successfully",
