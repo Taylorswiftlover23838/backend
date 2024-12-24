@@ -40,13 +40,17 @@ app.post("/webhook", bodyParser.raw({ type: "application/json" }), async (req, r
   }
 
   if (event.type === "charge.succeeded") {
-      const charge = event.data.object;  
-      const userId = charge.metadata.userId
-      const amount = (charge.amount)/100
-      updateUserBalance(userId, amount, "Purchase", "Card")
+    const charge = event.data.object;  
+    const userId = charge.metadata.userId;
+    const amount = charge.amount / 100;
+    const paymentMethod = charge.payment_method_details.type; 
 
-      return res.json({ received: true });
-  }
+    console.log(paymentMethod)
+    updateUserBalance(userId, amount, "Purchase", paymentMethod); 
+
+    return res.json({ received: true });
+}
+
 
   res.json({ received: true });
 });

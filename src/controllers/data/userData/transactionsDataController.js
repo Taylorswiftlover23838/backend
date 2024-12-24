@@ -1,46 +1,55 @@
 const db = require('../../../config/dbConn');
-const formatDate = require('../../../utils/formatDate');
 
 const transactionsData = async (req, res) => {
-    const userId = req.user.userId; 
-    const { transactionType } = req.body;
+    const userId = req.user.userId;
+    const { transactionType, page = 1 } = req.body; 
+
+    const limit = 10; 
+    const offset = (page - 1) * limit;
 
     try {
         let query;
         let params;
 
         if (transactionType === 'All') {
-            query = 'SELECT * FROM transactions WHERE user_id = ? ORDER BY timestamp DESC';
-            params = [userId];
+            query = `
+                SELECT * FROM transactions 
+                WHERE user_id = ? 
+                ORDER BY timestamp DESC 
+                LIMIT ? OFFSET ?`;
+            params = [userId, Number(limit), Number(offset)];
         } else {
-            query = 'SELECT * FROM transactions WHERE user_id = ? AND kind = ? ORDER BY timestamp DESC';
-            params = [userId, transactionType];
+            query = `
+                SELECT * FROM transactions 
+                WHERE user_id = ? AND kind = ? 
+                ORDER BY timestamp DESC 
+                LIMIT ? OFFSET ?`;
+            params = [userId, transactionType, Number(limit), Number(offset)];
         }
 
         const [data] = await db.query(query, params);
 
-        // Count query
-        const countQuery = transactionType === 'All' 
+        const countQuery = transactionType === 'All'
             ? 'SELECT COUNT(*) AS transactionCount FROM transactions WHERE user_id = ?'
             : 'SELECT COUNT(*) AS transactionCount FROM transactions WHERE user_id = ? AND kind = ?';
-        
-        const [countData] = await db.query(countQuery, params);
+
+        const [countData] = await db.query(countQuery, transactionType === 'All' ? [userId] : [userId, transactionType]);
 
         if (data.length > 0) {
-            data.forEach(item => {
-                item.timestamp = formatDate(item.timestamp);  
-            });
-
-            res.status(201).json({
-                transactionCount: countData[0].transactionCount, 
-                transactions: data 
+            res.status(200).json({
+                transactionCount: countData[0].transactionCount,
+                transactions: data,
             });
         } else {
-            res.status(404).json({ message: 'No transactions found' });
+            res.status(200).json({
+                transactionCount: 0,
+                transactions: [],
+                message: 'No transactions found',
+            });
         }
 
     } catch (err) {
-        console.error('Database query error:', err);  
+        console.error('Database query error:', err);
         return res.status(500).json({ message: "Internal server error" });
     }
 };

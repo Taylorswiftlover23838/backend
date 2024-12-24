@@ -14,7 +14,12 @@ const createCheckOutSession = async (req, res) => {
 
     try {
         const session = await stripe.checkout.sessions.create({
-            payment_method_types: ["card"],
+            payment_method_types: [
+                "card", 
+                "cashapp", 
+                "amazon_pay", 
+                "wechat_pay", 
+            ],
             mode: "payment",
             line_items: [
                 {
@@ -33,6 +38,11 @@ const createCheckOutSession = async (req, res) => {
             payment_intent_data: {
                 metadata: {
                     userId: userId,  
+                },
+            },
+            payment_method_options: {
+                wechat_pay: {
+                    client: 'web', 
                 },
             },
         });

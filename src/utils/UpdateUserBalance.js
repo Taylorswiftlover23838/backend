@@ -33,6 +33,7 @@ const UpdateUserBalance = async (userId, amount, kind, action) => {
   );
 
   emitToUser(userId, "userDataUpdate", updatedUser[0].balance);
+  console.log(`emitted ${updatedUser[0].balance} to user ${userId}`)
 };
 
 module.exports = UpdateUserBalance;
