@@ -1,4 +1,4 @@
-const db = require('../../../config/dbConn');  
+const db = require('../../config/dbConn');  
 
 const sendMessage = (req, res) => {
     const {messageInput, username, profile_image} = req.body;

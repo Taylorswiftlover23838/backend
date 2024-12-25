@@ -1,5 +1,5 @@
 const authenticateToken = require('../../middlewares/auth/authenticateToken');
-const createCheckOutSession = require('../../controllers/stripe/stripecontroller')
+const createCheckOutSession = require('../../controllers/stripe/stripeController')
 const express = require('express');
 const router = express.Router();
 

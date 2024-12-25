@@ -1,10 +1,8 @@
 const authenticateToken = require('../../middlewares/auth/authenticateToken');
+const protectedRoute = require('../../controllers/auth/protectedRouteController')
 const express = require('express');
 const router = express.Router();
 
-router.get('/', authenticateToken, (req, res) => {
-    const userId = req.user.userId; 
-    res.status(200).json({ message: "You have access!", userId });
-});
+router.get('/', authenticateToken, protectedRoute);
 
 module.exports = router;

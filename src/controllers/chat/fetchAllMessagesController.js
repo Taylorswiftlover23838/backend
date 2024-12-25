@@ -1,4 +1,4 @@
-const db = require('../../../config/dbConn');
+const db = require('../../config/dbConn');
 
 const fetchAllMessagesFromDB = async () => {
     try {

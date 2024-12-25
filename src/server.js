@@ -1,33 +1,53 @@
+//express
 require("dotenv").config();
 const express = require("express");
 const app = express();
 const cors = require("cors");
 const corsOptions = require("./config/corsOptions");
-const cookieParser = require("cookie-parser");
 const PORT = process.env.PORT;
-const { initialize, emitAll, onUserConnect } = require("./socket");
-const fetchAllMessages = require("./controllers/chat/messages/fetchAllMessagesController");
+
+//middleware
+const cookieParser = require("cookie-parser");
 const bodyParser = require('body-parser')
 const stripe = require("stripe")(process.env.STRIPE_SECRET);
+
+//api
+const fetchAllMessages = require("./controllers/chat/fetchAllMessagesController");
 const updateUserBalance = require('./utils/UpdateUserBalance')
+const { initialize, emitAll, onUserConnect } = require("./socket");
 
 // Routes
-const registerRoute = require("./routes/auth/register");
-const loginRoute = require("./routes/auth/login");
+
+//account routes
+const registerRoute = require("./routes/account/register");
+const loginRoute = require("./routes/account/login");
+const logoutRoute = require("./routes/account/logout");
+const resetpasswordRoute = require("./routes/account/resetPassword");
+const recoveryCodeRoute = require("./routes/account/recoveryCode");
+
+
+//account data routes
+const userDataRoute = require("./routes/account/data/userData");
+const transactionsDataRoute = require("./routes/account/data/transactionsData");
+
+//auth routes
 const refreshtokenRoute = require("./routes/auth/refresh");
-const logoutRoute = require("./routes/auth/logout");
 const protectedRoute = require("./routes/auth/protectedRoute");
-const resetpasswordRoute = require("./routes/auth/resetpassword");
+
+//chat routes
 const sendMessageRoute = require("./routes/chat/sendMessage");
-const userDataRoute = require("./routes/userData/userData");
-const recoveryCodeRoute = require("./routes/email/recoverycode");
+
+// Promo code route
 const promoCodeRoute = require("./routes/promocode/promocode");
-const transactionsDataRoute = require("./routes/userData/transactionsData");
+
+//stripe route
 const stripeRoute = require("./routes/stripe/stripe");
 
+//middleware
 app.use(cors(corsOptions));
 app.use(express.urlencoded({ extended: false }));
 
+//webhook
 app.post("/webhook", bodyParser.raw({ type: "application/json" }), async (req, res) => {
   const sig = req.headers["stripe-signature"];
   let event;
@@ -55,43 +75,41 @@ app.post("/webhook", bodyParser.raw({ type: "application/json" }), async (req, r
   res.json({ received: true });
 });
 
-
+//middleware
 app.use(express.json());
 app.use(cookieParser());
 
-// Auth routes
-app.use("/register", registerRoute);
-app.use("/login", loginRoute);
-app.use("/refreshtoken", refreshtokenRoute);
-app.use("/logout", logoutRoute);
-app.use("/protectedRoute", protectedRoute);
-app.use("/resetpassword", resetpasswordRoute);
+//account routes
+app.use("/api/account/register", registerRoute);
+app.use("/api/account/login", loginRoute);
+app.use("/api/account/logout", logoutRoute);
+app.use("/api/account/resetpassword", resetpasswordRoute);
+app.use("/api/account/recoveryCode", recoveryCodeRoute);
 
-// User data routes
-app.use("/userData", userDataRoute);
-app.use("/transactionsData", transactionsDataRoute);
+// account data routes
+app.use("/api/account/data/userData", userDataRoute);
+app.use("/api/account/data/transactionsData", transactionsDataRoute);
+
+//auth routes
+app.use("/api/auth/protectedRoute", protectedRoute);
+app.use("/api/auth/refreshtoken", refreshtokenRoute);
 
 // Chat routes
-app.use("/sendMessage", sendMessageRoute);
-
-// Email routes
-app.use("/recoveryCode", recoveryCodeRoute);
+app.use("/api/chat/sendMessage", sendMessageRoute);
 
 // Promo code route
-app.use("/promocode", promoCodeRoute);
+app.use("/api/promocode", promoCodeRoute);
 
 //stripe route
-app.use("/create-checkout-session", stripeRoute);
+app.use("/api/stripe/create-checkout-session", stripeRoute);
 
-// Create the HTTP server
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-// Initialize socket.io with the server
+//sockets
 const io = initialize(server);
 
-// Handle socket connections
 io.on("connection", (socket) => {
   onUserConnect(socket);
 

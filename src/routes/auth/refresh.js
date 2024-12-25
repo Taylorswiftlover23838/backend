@@ -1,5 +1,5 @@
 const express = require('express');
-const refreshtoken = require('../../controllers/auth/refreshtokencontroller')
+const refreshtoken = require('../../controllers/auth/refreshtokenController')
 
 const router = express.Router();
 

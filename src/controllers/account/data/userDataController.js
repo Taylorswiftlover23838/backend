@@ -1,5 +1,6 @@
 const db = require('../../../config/dbConn');
 const formatDate = require('../../../utils/formatDate')
+
 const userData = async (req, res) => {
     const userId = req.user.userId; 
 
