@@ -1,6 +1,8 @@
 const db = require('../../config/dbConn');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');   
+const generateClientSeed = require('../../utils/generateClientSeed')
+const generateServerSeed = require('../../utils/generateServerSeed')
 
  const register = async (req, res) => {
     const { email, username, password } = req.body;
@@ -14,9 +16,12 @@ const jwt = require('jsonwebtoken');
       if (user.length > 0) {
         return res.status(401).json({ message: "Email or username already exists" });
       }
+
+      const clientSeed = generateClientSeed();
+      const hashedServerSeed = generateServerSeed();
   
       const hashedPassword = await bcrypt.hash(password, 10);
-      await db.query("INSERT INTO users (email, username, password) VALUES (?, ?, ?)", [email, username, hashedPassword]);
+      await db.query("INSERT INTO users (email, username, password, clientSeed, serverSeed) VALUES (?, ?, ?, ?, ?)", [email, username, hashedPassword, clientSeed, hashedServerSeed]);
       
       const [registeredUser] = await db.query(
         "SELECT * FROM users WHERE email = ? OR username = ?",

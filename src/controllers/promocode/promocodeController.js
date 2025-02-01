@@ -48,8 +48,8 @@ const promoCode = async (req, res) => {
     `,
       [userId, promoCode]
     );
-
-    updateUserBalance(userId, codeData.token_amount, "Promotion", "Use Code");
+    
+    await updateUserBalance(userId, codeData.token_amount, "Promotion", "Use Code", "increase");
 
 
     res.status(200).json({

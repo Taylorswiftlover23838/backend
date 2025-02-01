@@ -2,55 +2,48 @@ const db = require('../../../config/dbConn');
 
 const transactionsData = async (req, res) => {
     const userId = req.user.userId;
-    const { transactionType, page = 1 } = req.body; 
+    const { transactionType = 'All', page = 1 } = req.body; 
 
-    const limit = 10; 
+    const limit = 10;
     const offset = (page - 1) * limit;
 
     try {
-        let query;
-        let params;
+        const isAllTransactions = transactionType === 'All';
+        const baseQuery = `
+            SELECT * FROM transactions 
+            WHERE user_id = ? 
+            ${isAllTransactions ? '' : 'AND kind = ?'} 
+            ORDER BY timestamp DESC 
+            LIMIT ? OFFSET ?`;
+        
+        const baseParams = isAllTransactions 
+            ? [userId, limit, offset] 
+            : [userId, transactionType, limit, offset];
 
-        if (transactionType === 'All') {
-            query = `
-                SELECT * FROM transactions 
-                WHERE user_id = ? 
-                ORDER BY timestamp DESC 
-                LIMIT ? OFFSET ?`;
-            params = [userId, Number(limit), Number(offset)];
-        } else {
-            query = `
-                SELECT * FROM transactions 
-                WHERE user_id = ? AND kind = ? 
-                ORDER BY timestamp DESC 
-                LIMIT ? OFFSET ?`;
-            params = [userId, transactionType, Number(limit), Number(offset)];
-        }
+        const [transactions] = await db.query(baseQuery, baseParams);
 
-        const [data] = await db.query(query, params);
+        const countQuery = `
+            SELECT COUNT(*) AS transactionCount 
+            FROM transactions 
+            WHERE user_id = ? 
+            ${isAllTransactions ? '' : 'AND kind = ?'}`;
+        
+        const countParams = isAllTransactions 
+            ? [userId] 
+            : [userId, transactionType];
 
-        const countQuery = transactionType === 'All'
-            ? 'SELECT COUNT(*) AS transactionCount FROM transactions WHERE user_id = ?'
-            : 'SELECT COUNT(*) AS transactionCount FROM transactions WHERE user_id = ? AND kind = ?';
+        const [countResult] = await db.query(countQuery, countParams);
+        const transactionCount = countResult[0].transactionCount;
 
-        const [countData] = await db.query(countQuery, transactionType === 'All' ? [userId] : [userId, transactionType]);
+        const response = transactions.length > 0
+            ? { transactionCount, transactions }
+            : { transactionCount: 0, transactions: [], message: 'No transactions found' };
 
-        if (data.length > 0) {
-            res.status(200).json({
-                transactionCount: countData[0].transactionCount,
-                transactions: data,
-            });
-        } else {
-            res.status(200).json({
-                transactionCount: 0,
-                transactions: [],
-                message: 'No transactions found',
-            });
-        }
+        res.status(200).json(response);
 
     } catch (err) {
         console.error('Database query error:', err);
-        return res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ message: "Internal server error" });
     }
 };
 

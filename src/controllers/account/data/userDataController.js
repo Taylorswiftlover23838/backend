@@ -21,7 +21,14 @@ const userData = async (req, res) => {
                 balance: userData.balance,
                 role: userData.role,
                 createdAt: date,
-                profile_image: userData.profile_image
+                avator: {
+                    profile_image: userData.profile_image,
+                },
+                stats: {
+                    totalWagered: userData.totalWagered,
+                    totalBets: userData.totalBets,
+                },
+
             }
         }); 
 
