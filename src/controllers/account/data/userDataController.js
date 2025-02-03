@@ -1,16 +1,12 @@
 const db = require('../../../config/dbConn');
 const formatDate = require('../../../utils/formatDate')
+const getUserData = require('../../../utils/getUserData')
 
 const userData = async (req, res) => {
     const userId = req.user.userId; 
 
     try {
-        const [results] = await db.query('SELECT * FROM users WHERE id = ?', [userId]);
-
-        if (results.length === 0) {
-            return res.status(404).json({ message: "User not found" });
-        }
-        const userData = results[0];
+        const userData = await getUserData(userId)
         const date = formatDate(userData.created_at)
         
         res.status(200).json({ 

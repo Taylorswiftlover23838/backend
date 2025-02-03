@@ -9,11 +9,11 @@ const updateSeed = async (req, res) => {
 
   try {
     const ClientSeed = newClientSeed.trim() !== "" ? newClientSeed : generateClientSeed();
-    const HashedServerSeed = generateServerSeed();
+    const { rawServerSeed, hashedServerSeed} = generateServerSeed();
 
     await db.query(
-      "UPDATE users SET clientSeed = ?, serverSeed = ?, nonce = 0 WHERE id = ?",
-      [ClientSeed, HashedServerSeed, userId]
+      "UPDATE users SET clientSeed = ?, serverSeed = ?, nonce = 0, rawServerSeed = ? WHERE id = ?",
+      [ClientSeed, hashedServerSeed, rawServerSeed, userId]
     );
 
     const userData = await getUserData(userId);

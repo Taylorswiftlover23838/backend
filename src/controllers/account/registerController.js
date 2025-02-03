@@ -18,10 +18,10 @@ const generateServerSeed = require('../../utils/generateServerSeed')
       }
 
       const clientSeed = generateClientSeed();
-      const hashedServerSeed = generateServerSeed();
+      const { rawServerSeed, hashedServerSeed} = generateServerSeed();
   
       const hashedPassword = await bcrypt.hash(password, 10);
-      await db.query("INSERT INTO users (email, username, password, clientSeed, serverSeed) VALUES (?, ?, ?, ?, ?)", [email, username, hashedPassword, clientSeed, hashedServerSeed]);
+      await db.query("INSERT INTO users (email, username, password, clientSeed, serverSeed, rawServerSeed) VALUES (?, ?, ?, ?, ?, ?)", [email, username, hashedPassword, clientSeed, hashedServerSeed, rawServerSeed]);
       
       const [registeredUser] = await db.query(
         "SELECT * FROM users WHERE email = ? OR username = ?",

@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 
-const getDiceRoll = (serverSeed, clientSeed, nonce) => {
-    const seed = `${serverSeed}-${clientSeed}-${nonce}`;
+const getDiceRoll = (rawServerSeed, clientSeed, nonce) => {
+    const seed = `${rawServerSeed}-${clientSeed}-${nonce}`;
     const hash = crypto.createHmac("sha256", seed).digest("hex");
     const subHash = hash.substring(0, 8);
     const rollNumber = Number.parseInt(subHash, 16);

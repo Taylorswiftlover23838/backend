@@ -4,7 +4,6 @@ const fetchSeed = async (req, res) => {
   const userId = req.user.userId; 
 
   try {
-
     const currentTime = new Date();
     const userData = await getUserData(userId)
         

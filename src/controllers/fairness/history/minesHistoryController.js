@@ -4,7 +4,7 @@ const db = require("../../../config/dbConn");
 const minesHistory = async (req, res) => {
   const userId = req.user.userId;
 
-  const { date, page} = req.body;
+  const { date } = req.body;
 
   try {
     res.status(200).json({ 

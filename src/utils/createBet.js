@@ -6,19 +6,33 @@ const getUserData = require("../utils/getUserData");
 const createBet = async (balance, betAmount, userId) => {
   try {
     if (betAmount > balance) {
-      console.log(betAmount);
-      console.log(balance);
       throw new Error("Not enough money");
     }
-
-    await updateUserBalance(userId, betAmount, "Dice", "Create Bet", "decrease");
 
     await db.query(
       `
       UPDATE users 
-      SET nonce = nonce + 1, 
-          totalBets = totalBets + 1, 
-          totalWagered = totalWagered + ? 
+      SET nonce = nonce + 1
+      WHERE id = ?
+      `,
+      [userId]
+    );
+
+    if (!betAmount) return;
+
+    await updateUserBalance(
+      userId,
+      betAmount,
+      "Dice",
+      "Create Bet",
+      "decrease"
+    );
+
+    await db.query(
+      `
+      UPDATE users 
+      SET totalBets = totalBets + 1,
+      totalWagered = totalWagered + ?
       WHERE id = ?
       `,
       [betAmount, userId]
@@ -34,7 +48,6 @@ const createBet = async (balance, betAmount, userId) => {
         },
       },
     });
-
   } catch (error) {
     console.error("Error in createBet:", error);
     throw error;

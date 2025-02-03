@@ -1,18 +1,24 @@
 const db = require("../config/dbConn");
 const { emitToUser } = require("../socket");
 const generateTransactionId = require("../utils/generateTransactionId");
-const getUserData = require("../utils/getUserData")
+const getUserData = require("../utils/getUserData");
 
 const UpdateUserBalance = async (userId, amount, kind, action, type) => {
   try {
     const adjustedAmount = type === "decrease" ? -amount : amount;
 
+    emitToUser(userId, "notificationUpdate", {
+      notification: {
+        amount: adjustedAmount,
+      },
+    });
+    
     await db.query("UPDATE users SET balance = balance + ? WHERE id = ?", [
       adjustedAmount,
       userId,
     ]);
 
-    const userData = await getUserData(userId)
+    const userData = await getUserData(userId);
 
     const transactionId = generateTransactionId();
     await db.query(
@@ -25,7 +31,7 @@ const UpdateUserBalance = async (userId, amount, kind, action, type) => {
 
     emitToUser(userId, "userDataUpdate", {
       updatedFields: {
-        balance: userData.balance
+        balance: userData.balance,
       },
     });
   } catch (error) {
