@@ -9,7 +9,7 @@ const createCheckOutSession = async (req, res) => {
     }
 
     if (!userId) {
-        return res.status(400).json({ error: "User ID is required" });
+        return res.status(400).json({ error: "User ID is required noob" });
     }
 
     try {
