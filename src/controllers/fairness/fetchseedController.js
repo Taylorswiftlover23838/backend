@@ -1,19 +1,18 @@
-const getUserData = require("../../utils/getUserData")
+const getFairnessdata = require('../../utils/getFairnessData')
 
 const fetchSeed = async (req, res) => {
   const userId = req.user.userId; 
 
   try {
-    const currentTime = new Date();
-    const userData = await getUserData(userId)
+    const fairnessData = await getFairnessdata(userId)
         
     res.status(200).json({ 
         seed: {
             userId: userId,
-            serverSeed: userData.serverSeed,
-            clientSeed: userData.clientSeed,
-            nonce: userData.nonce,
-            timestamp: currentTime,
+            serverSeed: fairnessData.serverSeed,
+            clientSeed: fairnessData.clientSeed,
+            nonce: fairnessData.nonce,
+            timestamp: fairnessData.timestamp,
         }
     }); 
 

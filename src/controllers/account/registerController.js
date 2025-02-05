@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');   
 const generateClientSeed = require('../../utils/generateClientSeed')
 const generateServerSeed = require('../../utils/generateServerSeed')
+const GenerateFairness = require('../../utils/GenerateFairness')
 
  const register = async (req, res) => {
     const { email, username, password } = req.body;
@@ -18,15 +19,20 @@ const generateServerSeed = require('../../utils/generateServerSeed')
       }
 
       const clientSeed = generateClientSeed();
-      const { rawServerSeed, hashedServerSeed} = generateServerSeed();
+      const { serverSeed, hashedServerSeed} = generateServerSeed();
+
+    
   
       const hashedPassword = await bcrypt.hash(password, 10);
-      await db.query("INSERT INTO users (email, username, password, clientSeed, serverSeed, rawServerSeed) VALUES (?, ?, ?, ?, ?, ?)", [email, username, hashedPassword, clientSeed, hashedServerSeed, rawServerSeed]);
+      await db.query("INSERT INTO users (email, username, password) VALUES (?, ?, ?)", [email, username, hashedPassword]);
+
       
       const [registeredUser] = await db.query(
         "SELECT * FROM users WHERE email = ? OR username = ?",
         [email, username]
       );
+
+      await GenerateFairness(registeredUser[0].id, hashedServerSeed, clientSeed, 0, serverSeed)
 
       const accessToken = jwt.sign({ userId: registeredUser[0].id, role: registeredUser[0].role }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "10mins" });
       const refreshToken = jwt.sign({ userId: registeredUser[0].id, role: registeredUser[0].role }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "7days" });

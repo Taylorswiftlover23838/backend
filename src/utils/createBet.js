@@ -10,31 +10,14 @@ const createBet = async (balance, betAmount, userId) => {
     }
 
     await db.query(
-      `
-      UPDATE users 
-      SET nonce = nonce + 1
-      WHERE id = ?
-      `,
+      `UPDATE fairness SET nonce = nonce + 1 WHERE user_id = ? AND active = true`,
       [userId]
     );
 
-    if (!betAmount) return;
-
-    await updateUserBalance(
-      userId,
-      betAmount,
-      "Dice",
-      "Create Bet",
-      "decrease"
-    );
+    await updateUserBalance(userId, betAmount, "Dice", "Create Bet", "decrease");
 
     await db.query(
-      `
-      UPDATE users 
-      SET totalBets = totalBets + 1,
-      totalWagered = totalWagered + ?
-      WHERE id = ?
-      `,
+      `UPDATE users SET totalBets = totalBets + 1, totalWagered = totalWagered + ? WHERE id = ?`,
       [betAmount, userId]
     );
 

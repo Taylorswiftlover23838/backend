@@ -3,15 +3,45 @@ const db = require("../../../config/dbConn");
 const diceHistory = async (req, res) => {
   const userId = req.user.userId;
 
-  const { date } = req.body;
-
+  const { date } = req.body
+  
   try {
-    res.status(200).json({ 
+    const [diceHistoryData] = await db.query("SELECT * FROM dice WHERE user_id = ?", [userId]);
 
-    }); 
+    const [fairnessData] = await db.query("SELECT * FROM fairness WHERE user_id = ?", [userId]);
+
+    const fairnessMap = {};
+    fairnessData.forEach(fairness => {
+      fairnessMap[fairness.id] = {
+        _id: fairness.id,
+        userId: fairness.user_id,
+        serverSeed: fairness.serverSeed,
+        clientSeed: fairness.clientSeed,
+        active: fairness.active,
+        nonce: fairness.nonce,
+        timestamp: fairness.timestamp,
+      };
+    });
+
+    const formattedData = diceHistoryData.map(dice => ({
+      _id: dice.id.toString(),
+      betAmount: parseFloat(dice.betAmount),
+      fairnessId: dice.fairness_id,
+      rangeValue: parseFloat(dice.rangeValue),
+      rollType: dice.rollType,
+      roll: parseFloat(dice.roll),
+      nonce: dice.nonce,
+      won: dice.won === 1, 
+      userId: dice.user_id.toString(),
+      timestamp: dice.timestamp,
+      fairness: fairnessMap[dice.fairness_id], 
+    }));
+
+    res.status(200).json(formattedData);
   } catch (error) {
-    
+    console.error("Error fetching dice history:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
-}
+};
 
-module.exports =  diceHistory;
+module.exports = diceHistory;

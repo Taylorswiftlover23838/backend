@@ -1,31 +1,27 @@
-const db = require("../../config/dbConn");
 const generateClientSeed = require("../../utils/generateClientSeed");
 const generateServerSeed = require("../../utils/generateServerSeed");
-const getUserData = require('../../utils/getUserData')
+const UpdateFairness = require('../../utils/UpdateFairness')
+const getFairnessData = require('../../utils/getFairnessData')
 
 const updateSeed = async (req, res) => {
   const userId = req.user.userId;
   const { newClientSeed } = req.body;
 
   try {
-    const ClientSeed = newClientSeed.trim() !== "" ? newClientSeed : generateClientSeed();
-    const { rawServerSeed, hashedServerSeed} = generateServerSeed();
+    const clientSeed = newClientSeed.trim() !== "" ? newClientSeed : generateClientSeed();
+    const { serverSeed, hashedServerSeed} = generateServerSeed();
 
-    await db.query(
-      "UPDATE users SET clientSeed = ?, serverSeed = ?, nonce = 0, rawServerSeed = ? WHERE id = ?",
-      [ClientSeed, hashedServerSeed, rawServerSeed, userId]
-    );
+    await UpdateFairness(userId, hashedServerSeed, clientSeed, 0, serverSeed)
 
-    const userData = await getUserData(userId);
-    const currentTime = new Date();
+    const fairnessData = await getFairnessData(userId);
 
     res.status(200).json({
       seed: {
         userId: userId,
-        serverSeed: userData.serverSeed,
-        clientSeed: userData.clientSeed,
-        nonce: userData.nonce,
-        timestamp: currentTime,
+        serverSeed: fairnessData.serverSeed,
+        clientSeed: fairnessData.clientSeed,
+        nonce: fairnessData.nonce,
+        timestamp: fairnessData.timestamp,
       },
     });
   } catch (error) {

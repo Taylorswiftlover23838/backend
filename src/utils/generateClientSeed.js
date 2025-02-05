@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 
 function generateClientSeed() {
-    return crypto.randomBytes(8).toString('base64'); 
+    return crypto.randomBytes(16).toString('base64'); 
 }
 
 module.exports = generateClientSeed;
