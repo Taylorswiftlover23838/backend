@@ -6,9 +6,10 @@ const diceHistory = async (req, res) => {
   const { date } = req.body
   
   try {
-    const [diceHistoryData] = await db.query("SELECT * FROM dice WHERE user_id = ?", [userId]);
-
-    const [fairnessData] = await db.query("SELECT * FROM fairness WHERE user_id = ?", [userId]);
+    const [diceHistoryData] = await db.query("SELECT * FROM dice WHERE user_id = ? AND DATE(timestamp) = ?",[userId, date]);
+    const [fairnessData] = await db.query("SELECT * FROM fairness WHERE user_id = ? AND DATE(timestamp) = ?",[userId, date]);
+    const activeFairnessData = await db.query("SELECT * FROM fairness WHERE user_id = ? and active = true", [userId])
+    const currentClientSeed = activeFairnessData[0][0].clientSeed
 
     const fairnessMap = {};
     fairnessData.forEach(fairness => {
@@ -37,7 +38,7 @@ const diceHistory = async (req, res) => {
       fairness: fairnessMap[dice.fairness_id], 
     }));
 
-    res.status(200).json(formattedData);
+    res.status(200).json({rolls: formattedData, clientSeed: currentClientSeed});
   } catch (error) {
     console.error("Error fetching dice history:", error);
     res.status(500).json({ error: "Internal server error" });
